@@ -5,6 +5,9 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"search-engine/db"
+	"search-engine/routes"
+	"search-engine/utils"
 	"syscall"
 	"time"
 
@@ -28,7 +31,11 @@ func main() {
 	app := fiber.New(fiber.Config{
 		IdleTimeout: 5 * time.Second,
 	})
+
 	app.Use(compress.New())
+	db.InitDB()
+	routes.SetRoutes(app)
+	utils.StartCronJobs()
 
 	// Start our server and listen for a shutdown
 	go func() {
@@ -40,8 +47,7 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
-	<-c // Block the main thread until an interrupt is received
+	<-c // Block the main thread until interupted
 	app.Shutdown()
-	fmt.Println("Shutting down server")
-
+	fmt.Println("shutting down server")
 }
